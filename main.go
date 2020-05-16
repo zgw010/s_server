@@ -32,56 +32,11 @@ func main() {
 
 	router := gin.Default()
 	// addSomeBaseAction()
-	router.POST("/register", func(c *gin.Context) {
-		userName := c.PostForm("userName")
-		userPassword := c.PostForm("userPassword")
-		userAvatarURL := c.PostForm("userAvatarURL")
-		userDetails := c.PostForm("userDetails")
-		userDateOfBirth := c.PostForm("userDateOfBirth")
-		userHeight := c.PostForm("userHeight")
-		userWeight := c.PostForm("userWeight")
-		userAims := c.PostForm("userAims")
-		var addRes = addUser(
-			userName,
-			userPassword,
-			userAvatarURL,
-			userDetails,
-			userDateOfBirth,
-			userHeight,
-			userWeight,
-			userAims,
-		)
-		if addRes == "ok" {
-			c.PureJSON(200, gin.H{
-				"status": 0,
-			})
-		} else {
-			c.PureJSON(200, gin.H{
-				"status": 1,
-			})
-		}
-		// c.String(200, addRes)
-	})
+	router.POST("/register", func(c *gin.Context) { addUser(c) })
 
-	router.POST("/login", func(c *gin.Context) {
-		userName := c.PostForm("userName")
-		userPassword := c.PostForm("userPassword")
-		var queryRes = queryUser(
-			userName,
-			userPassword,
-		)
-		if queryRes != "" {
-			c.PureJSON(200, gin.H{
-				"status": 0,
-				"cookie": queryRes,
-			})
-		} else {
-			c.PureJSON(200, gin.H{
-				"status": 1,
-			})
-		}
-		// c.String(200, addRes)
-	})
+	router.POST("/login", func(c *gin.Context) { queryUser(c) })
+
+	router.POST("/user/update_plan_group_id", func(c *gin.Context) { updateUserPlanGroupID(c) })
 
 	router.POST("/action/add_user_action", func(c *gin.Context) {
 		userName := c.PostForm("userName")
