@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
+
+	// "reflect"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -51,20 +52,7 @@ func addPlan(c *gin.Context) {
 	planName := c.PostForm("planName")
 	planDetails := c.PostForm("planDetails")
 	uuidUserID, err := uuid.FromString(userID)
-	// var user User
-	// db.Where("user_name = ?", userName).First(&user)
-	// userID := user.UserID
-	// if userID.String() == "" {
-	// 	return
-	// }
 	id := uuid.NewV5(uuidUserID, planName)
-
-	// planDetailsByte := []byte(planDetails)
-	// var planDetailsJSON []map[string]string
-	// json.Unmarshal(planDetailsByte, &planDetailsJSON)
-	// fmt.Println("planDetailsJSON", planDetailsJSON[0]["actionType"])
-	// fmt.Println("planDetailsJSON", planDetailsJSON[0] != nil && planDetailsJSON[0]["actionType"] != "")
-
 	db.Create(&Plan{
 		PlanID:        id,
 		PlanUserID:    uuidUserID,
@@ -79,12 +67,7 @@ func addPlan(c *gin.Context) {
 	})
 }
 
-func addPlanGroup(
-	userName string,
-	planGroupName string,
-	planIDs string,
-	planDetails string,
-) string {
+func addPlanGroup(c *gin.Context) {
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("failed to connect database")
@@ -92,45 +75,51 @@ func addPlanGroup(
 	db.LogMode(true)
 	defer db.Close()
 	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&PlanGroup{})
-	var user User
-	db.Where("user_name = ?", userName).First(&user)
-	userID := user.UserID
-	if userID.String() == "" {
-		return "not find user"
-	}
-	id := uuid.NewV5(userID, planGroupName)
 
-	planIDsByte := []byte(planIDs)
-	var planIDsJSON []string
-	json.Unmarshal(planIDsByte, &planIDsJSON)
-	fmt.Println("planDetailsJSON", reflect.TypeOf(planIDsJSON[0]))
-	fmt.Println("planDetailsJSON", planIDsJSON[0])
+	userID := c.PostForm("userID")
+	planGroupName := c.PostForm("planGroupName")
+	planIDs := c.PostForm("planIDs")
+	planGroupDetails := c.PostForm("planGroupDetails")
+
+	uuidUserID, err := uuid.FromString(userID)
+	id := uuid.NewV5(uuidUserID, planGroupName)
+
+	// planIDsByte := []byte(planIDs)
+	// var planIDsJSON []string
+	// json.Unmarshal(planIDsByte, &planIDsJSON)
+	// fmt.Println("planDetailsJSON", reflect.TypeOf(planIDsJSON[0]))
+	// fmt.Println("planDetailsJSON", planIDsJSON[0])
 	db.Create(&PlanGroup{
 		PlanGroupID:      id,
-		PlanGroupUserID:  userID,
+		PlanGroupUserID:  uuidUserID,
 		PlanGroupName:    planGroupName,
 		PlanIDs:          planIDs,
-		PlanGroupDetails: planDetails,
+		PlanGroupDetails: planGroupDetails,
 		PlanGroupTimes:   0,
 		PlanGroupStep:    0,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	})
-	return "ok"
+	c.PureJSON(200, gin.H{
+		"status": 0,
+	})
 }
 
-func getPlanGroupList(
-	userID string,
-) []PlanGroup {
+func getPlanGroupList(c *gin.Context) {
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("failed to connect database")
 	}
 	db.LogMode(true)
 	defer db.Close()
+	userID := c.Query("userID")
+
 	var planGroupList []PlanGroup
 	db.Where("plan_group_user_id = ?", userID).Find(&planGroupList)
-	return planGroupList
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   planGroupList,
+	})
 }
 
 func getPlanList(

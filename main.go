@@ -44,47 +44,8 @@ func main() {
 	router.GET("/plan/get_plan_list", func(c *gin.Context) { getPlanList(c) })
 
 	router.POST("/plan/add_plan", func(c *gin.Context) { addPlan(c) })
-	router.POST("/plan/add_plan_group", func(c *gin.Context) {
-		userName := c.PostForm("userName")
-		planGroupName := c.PostForm("planGroupName")
-		planIDs := c.PostForm("planIDs")
-		planGroupDetails := c.PostForm("planGroupDetails")
-		addRes := addPlanGroup(
-			userName,
-			planGroupName,
-			planIDs,
-			planGroupDetails,
-		)
-		if addRes != "" {
-			c.PureJSON(200, gin.H{
-				"status": 0,
-				"data":   addRes,
-			})
-		} else {
-			c.PureJSON(200, gin.H{
-				"status": 1,
-			})
-		}
-	})
-	router.GET("/plan/get_plan_group_list", func(c *gin.Context) {
-		userID := c.Query("userID")
-		planGroupList := getPlanGroupList(userID)
-		fmt.Println("planGroupList", planGroupList)
-		// if addRes != "" {
-		// 	c.PureJSON(200, gin.H{
-		// 		"status": 0,
-		// 		"data":   addRes,
-		// 	})
-		// } else {
-		// 	c.PureJSON(200, gin.H{
-		// 		"status": 1,
-		// 	})
-		// }
-		c.PureJSON(200, gin.H{
-			"status": 0,
-			"data":   planGroupList,
-		})
-	})
+	router.POST("/plan/add_plan_group", func(c *gin.Context) { addPlanGroup(c) })
+	router.GET("/plan/get_plan_group_list", func(c *gin.Context) { getPlanGroupList(c) })
 	router.GET("/plan/get_plan_group", func(c *gin.Context) {
 		planGroupID := c.Query("planGroupID")
 		planGroup := getPlanGroup(planGroupID)
