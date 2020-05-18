@@ -38,46 +38,12 @@ func main() {
 
 	router.POST("/user/update_plan_group_id", func(c *gin.Context) { updateUserPlanGroupID(c) })
 
-	router.POST("/action/add_user_action", func(c *gin.Context) {
-		userName := c.PostForm("userName")
-		actionName := c.PostForm("actionName")
-		actionDetails := c.PostForm("actionDetails")
-		addRes := addUserAction(
-			userName,
-			actionName,
-			actionDetails,
-		)
-		if addRes != "" {
-			c.PureJSON(200, gin.H{
-				"status": 0,
-				"data":   addRes,
-			})
-		} else {
-			c.PureJSON(200, gin.H{
-				"status": 1,
-			})
-		}
-	})
-	router.POST("/plan/add_plan", func(c *gin.Context) {
-		userName := c.PostForm("userName")
-		planName := c.PostForm("planName")
-		planDetails := c.PostForm("planDetails")
-		addRes := addPlan(
-			userName,
-			planName,
-			planDetails,
-		)
-		if addRes != "" {
-			c.PureJSON(200, gin.H{
-				"status": 0,
-				"data":   addRes,
-			})
-		} else {
-			c.PureJSON(200, gin.H{
-				"status": 1,
-			})
-		}
-	})
+	router.GET("/action/get_action_list", func(c *gin.Context) { getActionList(c) })
+	router.POST("/action/add_user_action", func(c *gin.Context) { addUserAction(c) })
+
+	router.GET("/plan/get_plan_list", func(c *gin.Context) { getPlanList(c) })
+
+	router.POST("/plan/add_plan", func(c *gin.Context) { addPlan(c) })
 	router.POST("/plan/add_plan_group", func(c *gin.Context) {
 		userName := c.PostForm("userName")
 		planGroupName := c.PostForm("planGroupName")
@@ -128,15 +94,7 @@ func main() {
 			"data":   planGroup,
 		})
 	})
-	router.GET("/plan/get_plan", func(c *gin.Context) {
-		planGroupID := c.Query("planGroupID")
-		plan := getCurPlan(planGroupID)
-		fmt.Println("plan", plan)
-		c.PureJSON(200, gin.H{
-			"status": 0,
-			"data":   plan,
-		})
-	})
+	router.GET("/plan/get_cur_plan", func(c *gin.Context) { getCurPlan(c) })
 
 	router.Run(":8080")
 }

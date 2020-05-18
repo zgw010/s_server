@@ -1,8 +1,10 @@
 package main
 
 import (
+	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	uuid "github.com/satori/go.uuid"
@@ -11,6 +13,7 @@ import (
 // UserAction 表, 基础动作库
 type UserAction struct {
 	ActionID      uuid.UUID `gorm:"primary_key"`
+	ActionUserID  uuid.UUID `gorm:"primary_key"`
 	ActionName    string
 	ActionType    string
 	ActionDetails string
@@ -19,11 +22,16 @@ type UserAction struct {
 	DeletedAt     *time.Time `sql:"index"`
 }
 
+type Action struct {
+	ActionID      string
+	ActionName    string
+	ActionType    string
+	ActionDetails string
+}
+
 func addUserAction(
-	userName string,
-	actionName string,
-	actionDetails string,
-) string {
+	c *gin.Context,
+) {
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("failed to connect database")
@@ -31,22 +39,79 @@ func addUserAction(
 	db.LogMode(true)
 	defer db.Close()
 	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&UserAction{})
-	var user User
-	db.Where("user_name = ?", userName).First(&user)
-	userID := user.UserID
-	if userID.String() == "" {
-		return "not find user"
-	}
-	// fmt.Println("userID", userID)
-	id := uuid.NewV5(userID, actionName)
-	// fmt.Println("id", id)
+
+	userID := c.PostForm("userID")
+	actionName := c.PostForm("actionName")
+	actionDetails := c.PostForm("actionDetails")
+	actionType := c.PostForm("actionType")
+	uuidUserID, err := uuid.FromString(userID)
+	id := uuid.NewV5(uuidUserID, actionName)
 	db.Create(&UserAction{
 		ActionID:      id,
+		ActionUserID:  uuidUserID,
 		ActionName:    actionName,
 		ActionDetails: actionDetails,
+		ActionType:    actionType,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
-		ActionType:    "user",
 	})
-	return "ok"
+	c.PureJSON(200, gin.H{
+		"status": 0,
+	})
+}
+
+func getActionList(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+	var actionList []Action
+	var userActionList []UserAction
+	var baseActionList []BaseAction
+	userID := c.Query("userID")
+	actionType := c.Query("actionType")
+	if actionType == "user" {
+		db.Where("action_user_id = ?", userID).Find(&userActionList)
+		c.PureJSON(200, gin.H{
+			"status": 0,
+			"data":   userActionList,
+		})
+	} else if actionType == "base" {
+		db.Find(&baseActionList)
+		c.PureJSON(200, gin.H{
+			"status": 0,
+			"data":   baseActionList,
+		})
+	} else {
+		db.Find(&baseActionList)
+		db.Where("action_user_id = ?", userID).Find(&userActionList)
+		for _, v := range userActionList {
+			action := Action{
+				v.ActionID.String(),
+				v.ActionName,
+				v.ActionType,
+				v.ActionDetails,
+			}
+			actionList = append(actionList, action)
+		}
+		for _, v := range baseActionList {
+
+			actionIDString := strconv.FormatInt(v.ActionID, 10)
+			action := Action{
+				actionIDString,
+				v.ActionName,
+				v.ActionType,
+				v.ActionDetails,
+			}
+			actionList = append(actionList, action)
+		}
+		// fmt.Println("actionList", actionList)
+		c.PureJSON(200, gin.H{
+			"status": 0,
+			"data":   actionList,
+		})
+	}
+
 }

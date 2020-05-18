@@ -22,7 +22,7 @@ type User struct {
 	UserWeight      string
 	UserSex         string
 	UserAims        string
-	PlanGroupID     string
+	UserPlanGroupID string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       *time.Time `sql:"index"`

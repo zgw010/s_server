@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	uuid "github.com/satori/go.uuid"
@@ -37,11 +38,7 @@ type PlanGroup struct {
 	DeletedAt        *time.Time
 }
 
-func addPlan(
-	userName string,
-	planName string,
-	planDetails string,
-) string {
+func addPlan(c *gin.Context) {
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("failed to connect database")
@@ -49,30 +46,37 @@ func addPlan(
 	db.LogMode(true)
 	defer db.Close()
 	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&Plan{})
-	var user User
-	db.Where("user_name = ?", userName).First(&user)
-	userID := user.UserID
-	if userID.String() == "" {
-		return "not find user"
-	}
-	id := uuid.NewV5(userID, planName)
 
-	planDetailsByte := []byte(planDetails)
-	var planDetailsJSON []map[string]string
-	json.Unmarshal(planDetailsByte, &planDetailsJSON)
-	fmt.Println("planDetailsJSON", planDetailsJSON[0]["actionType"])
-	fmt.Println("planDetailsJSON", planDetailsJSON[0] != nil && planDetailsJSON[0]["actionType"] != "")
+	userID := c.PostForm("userID")
+	planName := c.PostForm("planName")
+	planDetails := c.PostForm("planDetails")
+	uuidUserID, err := uuid.FromString(userID)
+	// var user User
+	// db.Where("user_name = ?", userName).First(&user)
+	// userID := user.UserID
+	// if userID.String() == "" {
+	// 	return
+	// }
+	id := uuid.NewV5(uuidUserID, planName)
+
+	// planDetailsByte := []byte(planDetails)
+	// var planDetailsJSON []map[string]string
+	// json.Unmarshal(planDetailsByte, &planDetailsJSON)
+	// fmt.Println("planDetailsJSON", planDetailsJSON[0]["actionType"])
+	// fmt.Println("planDetailsJSON", planDetailsJSON[0] != nil && planDetailsJSON[0]["actionType"] != "")
 
 	db.Create(&Plan{
 		PlanID:        id,
-		PlanUserID:    userID,
+		PlanUserID:    uuidUserID,
 		PlanName:      planName,
 		PlanDetails:   planDetails,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 		PlanCompleted: false,
 	})
-	return "ok"
+	c.PureJSON(200, gin.H{
+		"status": 0,
+	})
 }
 
 func addPlanGroup(
@@ -129,6 +133,25 @@ func getPlanGroupList(
 	return planGroupList
 }
 
+func getPlanList(
+	c *gin.Context,
+) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+
+	userID := c.Query("userID")
+	var planList []Plan
+	db.Where("plan_user_id = ?", userID).Find(&planList)
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   planList,
+	})
+}
+
 func getPlanGroup(
 	planGroupID string,
 ) PlanGroup {
@@ -151,8 +174,9 @@ func getPlanGroup(
 }
 
 func getCurPlan(
-	planGroupID string,
-) Plan {
+	c *gin.Context,
+) {
+	userID := c.Query("userID")
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("failed to connect database")
@@ -160,16 +184,33 @@ func getCurPlan(
 	db.LogMode(true)
 	defer db.Close()
 	var planGroup PlanGroup
-	db.Where("plan_group_id = ?", planGroupID).First(&planGroup)
-	fmt.Println("planGroup", planGroup)
-	planIDs := planGroup.PlanIDs
-	planIDsByte := []byte(planIDs)
-	var planIDsJSON []string
-	json.Unmarshal(planIDsByte, &planIDsJSON)
-	fmt.Println("planDetailsJSON", planIDsJSON[planGroup.PlanGroupStep])
-
+	var user User
 	var plan Plan
-	db.Where("plan_id = ?", planIDsJSON[planGroup.PlanGroupStep]).First(&plan)
 
-	return plan
+	db.Where("user_id = ?", userID).First(&user)
+	planGroupID := user.UserPlanGroupID
+	if planGroupID != "" {
+		db.Where("plan_group_id = ?", planGroupID).First(&planGroup)
+		planIDs := planGroup.PlanIDs
+		planIDsByte := []byte(planIDs)
+		var planIDsJSON []string
+		json.Unmarshal(planIDsByte, &planIDsJSON)
+		db.Where("plan_id = ?", planIDsJSON[planGroup.PlanGroupStep]).First(&plan)
+		c.PureJSON(200, gin.H{
+			"status": 0,
+			"data":   plan,
+		})
+	} else {
+		var planGroupList []PlanGroup
+		db.Where("plan_group_user_id = ?", userID).Find(&planGroupList)
+		if len(planGroupList) > 0 { // 有计划组，但为指定当前计划组
+			c.PureJSON(200, gin.H{
+				"status": 10001,
+			})
+		} else { // 用户未指定任何计划组
+			c.PureJSON(200, gin.H{
+				"status": 10002,
+			})
+		}
+	}
 }
