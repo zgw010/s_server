@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,30 +30,28 @@ func main() {
 
 	router := gin.Default()
 	// addSomeBaseAction()
+	// user
 	router.POST("/register", func(c *gin.Context) { addUser(c) })
-
 	router.POST("/login", func(c *gin.Context) { queryUser(c) })
-
 	router.POST("/user/update_plan_group_id", func(c *gin.Context) { updateUserPlanGroupID(c) })
 
+	// action
 	router.GET("/action/get_action_list", func(c *gin.Context) { getActionList(c) })
 	router.POST("/action/add_user_action", func(c *gin.Context) { addUserAction(c) })
 
+	// plan
 	router.GET("/plan/get_plan_list", func(c *gin.Context) { getPlanList(c) })
-
+	router.GET("/plan/get_cur_plan", func(c *gin.Context) { getCurPlan(c) })
 	router.POST("/plan/add_plan", func(c *gin.Context) { addPlan(c) })
 	router.POST("/plan/add_plan_group", func(c *gin.Context) { addPlanGroup(c) })
 	router.GET("/plan/get_plan_group_list", func(c *gin.Context) { getPlanGroupList(c) })
-	router.GET("/plan/get_plan_group", func(c *gin.Context) {
-		planGroupID := c.Query("planGroupID")
-		planGroup := getPlanGroup(planGroupID)
-		fmt.Println("planGroup", planGroup)
-		c.PureJSON(200, gin.H{
-			"status": 0,
-			"data":   planGroup,
-		})
-	})
-	router.GET("/plan/get_cur_plan", func(c *gin.Context) { getCurPlan(c) })
+	router.GET("/plan/get_plan_group", func(c *gin.Context) { getPlanGroup(c) })
+	router.POST("/plan/update_plan_group", func(c *gin.Context) { updatePlanGroup(c) })
+
+	// data
+	router.GET("/data/get_data_list", func(c *gin.Context) { getDataList(c) })
+	router.GET("/data/get_data", func(c *gin.Context) { getData(c) })
+	router.POST("/data/add_data", func(c *gin.Context) { addData(c) })
 
 	router.Run(":8080")
 }

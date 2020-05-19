@@ -61,9 +61,7 @@ func queryUser(
 	return
 }
 
-func addUser(
-	c *gin.Context,
-) {
+func addUser(c *gin.Context) {
 	userName := c.PostForm("userName")
 	userPassword := c.PostForm("userPassword")
 	userAvatarURL := c.PostForm("userAvatarURL")
@@ -195,14 +193,15 @@ func updateUser(
 func updateUserPlanGroupID(
 	c *gin.Context,
 ) {
-	userID := c.PostForm("userID")
-	userPlanGroupID := c.PostForm("userPlanGroupID")
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("failed to connect database")
 	}
 	db.LogMode(true)
 	defer db.Close()
+
+	userID := c.PostForm("userID")
+	userPlanGroupID := c.PostForm("userPlanGroupID")
 	var user User
 	db.Where("user_id = ?", userID).First(&user)
 	db.Model(&user).Updates(map[string]interface{}{

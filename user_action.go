@@ -22,6 +22,7 @@ type UserAction struct {
 	DeletedAt     *time.Time `sql:"index"`
 }
 
+// Action 结构体，用来放用户动作和基础动作
 type Action struct {
 	ActionID      string
 	ActionName    string
@@ -29,9 +30,7 @@ type Action struct {
 	ActionDetails string
 }
 
-func addUserAction(
-	c *gin.Context,
-) {
+func addUserAction(c *gin.Context) {
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("failed to connect database")
