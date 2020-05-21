@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -28,17 +29,17 @@ type User struct {
 	DeletedAt       *time.Time `sql:"index"`
 }
 
-func queryUser(
-	c *gin.Context,
-) {
-	userName := c.PostForm("userName")
-	userPassword := c.PostForm("userPassword")
+func queryUser(c *gin.Context) {
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("failed to connect database")
 	}
 	db.LogMode(true)
 	defer db.Close()
+
+	userName := c.PostForm("userName")
+	userPassword := c.PostForm("userPassword")
+	fmt.Println("xxx", userName, userPassword, c)
 	var user User
 	db.Where("user_name = ? AND user_password = ?", userName, userPassword).First(&user)
 	if user.UserName != "" {

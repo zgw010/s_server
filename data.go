@@ -60,8 +60,17 @@ func getDataList(c *gin.Context) {
 	defer db.Close()
 
 	userID := c.Query("userID")
+	startTime := c.Query("startTime")
+	endTime := c.Query("endTime")
+	t1, _ := time.Parse(time.RFC3339, startTime+"T00:00:00Z")
+	t2, _ := time.Parse(time.RFC3339, endTime+"T23:59:59Z")
 	var dataList []Data
-	db.Where("data_user_id = ?", userID).Find(&dataList)
+	db.Where(
+		"data_user_id = ? AND created_at BETWEEN ? AND ?",
+		userID,
+		t1,
+		t2,
+	).Find(&dataList)
 	c.PureJSON(200, gin.H{
 		"status": 0,
 		"data":   dataList,

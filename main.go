@@ -53,5 +53,9 @@ func main() {
 	router.GET("/data/get_data", func(c *gin.Context) { getData(c) })
 	router.POST("/data/add_data", func(c *gin.Context) { addData(c) })
 
+	router.GET("/data/get_run_data_list", func(c *gin.Context) { getRunDataList(c) })
+	router.GET("/data/get_run_data", func(c *gin.Context) { getRunData(c) })
+	router.POST("/data/add_run_data", func(c *gin.Context) { addRunData(c) })
+
 	router.Run(":8080")
 }
