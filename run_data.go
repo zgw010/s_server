@@ -82,7 +82,7 @@ func getRunDataList(c *gin.Context) {
 		userID,
 		t1,
 		t2,
-	).Find(&runDataList)
+	).Order("created_at desc").Find(&runDataList)
 	c.PureJSON(200, gin.H{
 		"status": 0,
 		"data":   runDataList,
