@@ -24,10 +24,13 @@ type UserAction struct {
 
 // Action 结构体，用来放用户动作和基础动作
 type Action struct {
-	ActionID      string
-	ActionName    string
-	ActionType    string
-	ActionDetails string
+	ActionID       string
+	ActionName     string
+	ActionType     string
+	ActionDetails  string
+	ActionImgURL   string
+	ActionVideoURL string
+	ActionMoreURL  string
 }
 
 func addUserAction(c *gin.Context) {
@@ -92,6 +95,9 @@ func getActionList(c *gin.Context) {
 				v.ActionName,
 				v.ActionType,
 				v.ActionDetails,
+				"",
+				"",
+				"",
 			}
 			actionList = append(actionList, action)
 		}
@@ -103,6 +109,9 @@ func getActionList(c *gin.Context) {
 				v.ActionName,
 				v.ActionType,
 				v.ActionDetails,
+				v.ActionImgURL,
+				v.ActionVideoURL,
+				v.ActionMoreURL,
 			}
 			actionList = append(actionList, action)
 		}
