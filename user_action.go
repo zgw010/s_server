@@ -104,7 +104,7 @@ func deleteUserAction(c *gin.Context) {
 	actionID := c.PostForm("actionID")
 	var userAction UserAction
 	db.Where("action_id = ?", actionID).First(&userAction)
-	db.Delete(&userAction)
+	db.Unscoped().Delete(&userAction)
 	c.PureJSON(200, gin.H{
 		"status": 0,
 	})

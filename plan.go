@@ -143,7 +143,7 @@ func deletePlan(c *gin.Context) {
 	planID := c.PostForm("planID")
 	var plan Plan
 	db.Where("plan_id = ?", planID).First(&plan)
-	db.Delete(&plan)
+	db.Unscoped().Delete(&plan)
 	c.PureJSON(200, gin.H{
 		"status": 0,
 	})
@@ -176,7 +176,7 @@ func getPlanGroupList(c *gin.Context) {
 	userID := c.Query("userID")
 
 	var planGroupList []PlanGroup
-	db.Where("plan_group_user_id = ?", userID).Find(&planGroupList)
+	db.Where("plan_group_user_id = ?", userID).Order("updated_at desc").Find(&planGroupList)
 	c.PureJSON(200, gin.H{
 		"status": 0,
 		"data":   planGroupList,
@@ -205,7 +205,7 @@ func addPlanGroup(c *gin.Context) {
 	defer db.Close()
 	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&PlanGroup{})
 
-	userID := c.PostForm("userID")
+	userID := c.PostForm("planGroupUserID")
 	planGroupName := c.PostForm("planGroupName")
 	planGroupDetails := c.PostForm("planGroupDetails")
 
@@ -286,7 +286,7 @@ func deletePlanGroup(c *gin.Context) {
 	planGroupID := c.PostForm("planGroupID")
 	var planGroup PlanGroup
 	db.Where("plan_group_id = ?", planGroupID).First(&planGroup)
-	db.Delete(&planGroup)
+	db.Unscoped().Delete(&planGroup)
 	c.PureJSON(200, gin.H{
 		"status": 0,
 	})

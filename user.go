@@ -43,23 +43,15 @@ func queryUser(c *gin.Context) {
 	var user User
 	db.Where("user_name = ? AND user_password = ?", userName, userPassword).First(&user)
 	if user.UserName != "" {
-		userJSON, err := json.Marshal(user)
-		if err == nil {
-			c.PureJSON(200, gin.H{
-				"status":   0,
-				"userInfo": string(userJSON),
-			})
-			return
-		}
+		c.PureJSON(200, gin.H{
+			"status":   0,
+			"userInfo": user,
+		})
+	} else {
 		c.PureJSON(200, gin.H{
 			"status": 1,
 		})
-		return
 	}
-	c.PureJSON(200, gin.H{
-		"status": 1,
-	})
-	return
 }
 
 func addUser(c *gin.Context) {
@@ -207,7 +199,7 @@ func updateUserPlanGroupID(
 	db.Where("user_id = ?", userID).First(&user)
 	db.Model(&user).Updates(map[string]interface{}{
 		"UserPlanGroupID": userPlanGroupID,
-		"UpdatedAt":       time.Now(),
+		// "UpdatedAt":       time.Now(),
 	})
 	if err == nil {
 		c.PureJSON(200, gin.H{
