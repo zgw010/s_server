@@ -38,15 +38,21 @@ func main() {
 	// action
 	router.GET("/action/get_action_list", func(c *gin.Context) { getActionList(c) })
 	router.POST("/action/add_user_action", func(c *gin.Context) { addUserAction(c) })
+	router.POST("/action/update_user_action", func(c *gin.Context) { updateUserAction(c) })
+	router.POST("/action/delete_user_action", func(c *gin.Context) { deleteUserAction(c) })
 
 	// plan
-	router.GET("/plan/get_plan_list", func(c *gin.Context) { getPlanList(c) })
 	router.GET("/plan/get_cur_plan", func(c *gin.Context) { getCurPlan(c) })
+	router.GET("/plan/get_plan_list", func(c *gin.Context) { getPlanList(c) })
 	router.POST("/plan/add_plan", func(c *gin.Context) { addPlan(c) })
-	router.POST("/plan/add_plan_group", func(c *gin.Context) { addPlanGroup(c) })
+	router.POST("/plan/update_plan", func(c *gin.Context) { updatePlan(c) })
+	router.POST("/plan/delete_plan", func(c *gin.Context) { deletePlan(c) })
+
 	router.GET("/plan/get_plan_group_list", func(c *gin.Context) { getPlanGroupList(c) })
 	router.GET("/plan/get_plan_group", func(c *gin.Context) { getPlanGroup(c) })
+	router.POST("/plan/add_plan_group", func(c *gin.Context) { addPlanGroup(c) })
 	router.POST("/plan/update_plan_group", func(c *gin.Context) { updatePlanGroup(c) })
+	router.POST("/plan/delete_plan_group", func(c *gin.Context) { deletePlanGroup(c) })
 
 	// data
 	router.GET("/data/get_data_list", func(c *gin.Context) { getDataList(c) })

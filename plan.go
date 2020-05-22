@@ -38,111 +38,6 @@ type PlanGroup struct {
 	DeletedAt         *time.Time
 }
 
-func addPlan(c *gin.Context) {
-	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	db.LogMode(true)
-	defer db.Close()
-	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&Plan{})
-
-	userID := c.PostForm("userID")
-	planName := c.PostForm("planName")
-	planDetails := c.PostForm("planDetails")
-	uuidUserID, err := uuid.FromString(userID)
-	id := uuid.NewV5(uuidUserID, planName)
-	db.Create(&Plan{
-		PlanID:      id,
-		PlanUserID:  uuidUserID,
-		PlanName:    planName,
-		PlanDetails: planDetails,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	})
-	c.PureJSON(200, gin.H{
-		"status": 0,
-	})
-}
-
-func addPlanGroup(c *gin.Context) {
-	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	db.LogMode(true)
-	defer db.Close()
-	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&PlanGroup{})
-
-	userID := c.PostForm("userID")
-	planGroupName := c.PostForm("planGroupName")
-	planGroupDetails := c.PostForm("planGroupDetails")
-
-	uuidUserID, err := uuid.FromString(userID)
-	id := uuid.NewV5(uuidUserID, planGroupName)
-
-	db.Create(&PlanGroup{
-		PlanGroupID:      id,
-		PlanGroupUserID:  uuidUserID,
-		PlanGroupName:    planGroupName,
-		PlanGroupDetails: planGroupDetails,
-		PlanGroupTimes:   0,
-		PlanGroupStep:    0,
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
-	})
-	c.PureJSON(200, gin.H{
-		"status": 0,
-	})
-}
-
-func getPlanGroupList(c *gin.Context) {
-	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	db.LogMode(true)
-	defer db.Close()
-	userID := c.Query("userID")
-
-	var planGroupList []PlanGroup
-	db.Where("plan_group_user_id = ?", userID).Find(&planGroupList)
-	c.PureJSON(200, gin.H{
-		"status": 0,
-		"data":   planGroupList,
-	})
-}
-
-func getPlanList(c *gin.Context) {
-	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	db.LogMode(true)
-	defer db.Close()
-
-	userID := c.Query("userID")
-	var planList []Plan
-	db.Where("plan_user_id = ?", userID).Find(&planList)
-	c.PureJSON(200, gin.H{
-		"status": 0,
-		"data":   planList,
-	})
-}
-
-func getPlanGroup(c *gin.Context) PlanGroup {
-	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	db.LogMode(true)
-	defer db.Close()
-	var planGroup PlanGroup
-	// db.Where("plan_group_id = ?", planGroupID).First(&planGroup)
-
-	return planGroup
-}
-
 func getCurPlan(c *gin.Context) {
 	userID := c.Query("userID")
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
@@ -185,6 +80,155 @@ func getCurPlan(c *gin.Context) {
 	}
 }
 
+func addPlan(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&Plan{})
+
+	userID := c.PostForm("userID")
+	planName := c.PostForm("planName")
+	planDetails := c.PostForm("planDetails")
+	uuidUserID, err := uuid.FromString(userID)
+	id := uuid.NewV5(uuidUserID, planName)
+	plan := Plan{
+		PlanID:      id,
+		PlanUserID:  uuidUserID,
+		PlanName:    planName,
+		PlanDetails: planDetails,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+	db.Create(plan)
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   plan,
+	})
+}
+
+func updatePlan(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+
+	var plan Plan
+	planID := c.PostForm("planID")
+	planName := c.PostForm("planName")
+	planDetails := c.PostForm("planDetails")
+	db.Where("plan_id = ?", planID).First(&plan)
+	db.Model(&plan).Updates(map[string]interface{}{
+		"PlanName":    planName,
+		"PlanDetails": planDetails,
+	})
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   plan,
+	})
+}
+
+func deletePlan(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+
+	planID := c.PostForm("planID")
+	var plan Plan
+	db.Where("plan_id = ?", planID).First(&plan)
+	db.Delete(&plan)
+	c.PureJSON(200, gin.H{
+		"status": 0,
+	})
+}
+
+func getPlanList(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+
+	userID := c.Query("userID")
+	var planList []Plan
+	db.Where("plan_user_id = ?", userID).Order("updated_at desc").Find(&planList)
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   planList,
+	})
+}
+
+func getPlanGroupList(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+	userID := c.Query("userID")
+
+	var planGroupList []PlanGroup
+	db.Where("plan_group_user_id = ?", userID).Find(&planGroupList)
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   planGroupList,
+	})
+}
+
+func getPlanGroup(c *gin.Context) PlanGroup {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+	var planGroup PlanGroup
+	// db.Where("plan_group_id = ?", planGroupID).First(&planGroup)
+
+	return planGroup
+}
+
+func addPlanGroup(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&PlanGroup{})
+
+	userID := c.PostForm("userID")
+	planGroupName := c.PostForm("planGroupName")
+	planGroupDetails := c.PostForm("planGroupDetails")
+
+	uuidUserID, err := uuid.FromString(userID)
+	id := uuid.NewV5(uuidUserID, planGroupName)
+
+	planGroup := PlanGroup{
+		PlanGroupID:      id,
+		PlanGroupUserID:  uuidUserID,
+		PlanGroupName:    planGroupName,
+		PlanGroupDetails: planGroupDetails,
+		PlanGroupTimes:   0,
+		PlanGroupStep:    0,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}
+	db.Create(planGroup)
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   planGroup,
+	})
+}
+
 func updatePlanGroup(c *gin.Context) {
 	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
@@ -195,6 +239,7 @@ func updatePlanGroup(c *gin.Context) {
 
 	var planGroup PlanGroup
 	planGroupID := c.PostForm("planGroupID")
+	planGroupName := c.PostForm("planGroupName")
 	planGroupDetails := c.PostForm("planGroupDetails")
 	updateType := c.PostForm("updateType")
 
@@ -207,27 +252,42 @@ func updatePlanGroup(c *gin.Context) {
 		fmt.Println(planGroupDetailsJSON)
 		if planGroup.PlanGroupStep >= len(planGroupDetailsJSON)-1 {
 			db.Model(&planGroup).Updates(map[string]interface{}{
-				"planGroupID":       planGroupID,
 				"PlanGroupStep":     0,
 				"PlanGroupTimes":    planGroup.PlanGroupTimes + 1,
 				"PlanCompletedTime": time.Now().Format("2006-01-02"),
-				"UpdatedAt":         time.Now(),
 			})
 		} else {
 			db.Model(&planGroup).Updates(map[string]interface{}{
-				"planGroupID":       planGroupID,
 				"PlanGroupStep":     planGroup.PlanGroupStep + 1,
 				"PlanCompletedTime": time.Now().Format("2006-01-02"),
-				"UpdatedAt":         time.Now(),
 			})
 		}
 
 	} else {
 		db.Model(&planGroup).Updates(map[string]interface{}{
-			"planGroupID":      planGroupID,
-			"planGroupDetails": planGroupDetails,
-			"UpdatedAt":        time.Now(),
+			"PlanGroupName":    planGroupName,
+			"PlanGroupDetails": planGroupDetails,
 		})
 	}
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   planGroup,
+	})
+}
 
+func deletePlanGroup(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+
+	planGroupID := c.PostForm("planGroupID")
+	var planGroup PlanGroup
+	db.Where("plan_group_id = ?", planGroupID).First(&planGroup)
+	db.Delete(&planGroup)
+	c.PureJSON(200, gin.H{
+		"status": 0,
+	})
 }

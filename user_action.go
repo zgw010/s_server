@@ -48,7 +48,8 @@ func addUserAction(c *gin.Context) {
 	actionType := c.PostForm("actionType")
 	uuidUserID, err := uuid.FromString(userID)
 	id := uuid.NewV5(uuidUserID, actionName)
-	db.Create(&UserAction{
+	var userAction UserAction
+	userAction = UserAction{
 		ActionID:      id,
 		ActionUserID:  uuidUserID,
 		ActionName:    actionName,
@@ -56,7 +57,54 @@ func addUserAction(c *gin.Context) {
 		ActionType:    actionType,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
+	}
+	db.Create(userAction)
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   userAction,
 	})
+}
+
+func updateUserAction(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&UserAction{})
+
+	actionID := c.PostForm("actionID")
+	actionName := c.PostForm("actionName")
+	actionDetails := c.PostForm("actionDetails")
+	actionType := c.PostForm("actionType")
+	// uuidActionID, err := uuid.FromString(actionID)
+	var userAction UserAction
+	db.Where("action_id = ?", actionID).First(&userAction)
+	db.Model(&userAction).Updates(map[string]interface{}{
+		"ActionName":    actionName,
+		"ActionType":    actionType,
+		"ActionDetails": actionDetails,
+	})
+	c.PureJSON(200, gin.H{
+		"status": 0,
+		"data":   userAction,
+	})
+}
+
+func deleteUserAction(c *gin.Context) {
+	db, err := gorm.Open("mysql", "root:19970705qq@(47.100.43.162)/zgw_s?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.LogMode(true)
+	defer db.Close()
+	db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(&UserAction{})
+
+	actionID := c.PostForm("actionID")
+	var userAction UserAction
+	db.Where("action_id = ?", actionID).First(&userAction)
+	db.Delete(&userAction)
 	c.PureJSON(200, gin.H{
 		"status": 0,
 	})
@@ -75,20 +123,20 @@ func getActionList(c *gin.Context) {
 	userID := c.Query("userID")
 	actionType := c.Query("actionType")
 	if actionType == "user" {
-		db.Where("action_user_id = ?", userID).Find(&userActionList)
+		db.Where("action_user_id = ?", userID).Order("updated_at desc").Find(&userActionList)
 		c.PureJSON(200, gin.H{
 			"status": 0,
 			"data":   userActionList,
 		})
 	} else if actionType == "base" {
-		db.Find(&baseActionList)
+		db.Order("updated_at desc").Find(&baseActionList)
 		c.PureJSON(200, gin.H{
 			"status": 0,
 			"data":   baseActionList,
 		})
 	} else {
-		db.Find(&baseActionList)
-		db.Where("action_user_id = ?", userID).Find(&userActionList)
+		db.Order("updated_at desc").Find(&baseActionList)
+		db.Where("action_user_id = ?", userID).Order("updated_at desc").Find(&userActionList)
 		for _, v := range userActionList {
 			action := Action{
 				v.ActionID.String(),
@@ -121,5 +169,4 @@ func getActionList(c *gin.Context) {
 			"data":   actionList,
 		})
 	}
-
 }
